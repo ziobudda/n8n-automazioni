@@ -1,0 +1,698 @@
+{
+  "name": "Crea post FB",
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-sonnet-4-20250514",
+          "mode": "list",
+          "cachedResultName": "Claude Sonnet 4"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        -16,
+        -128
+      ],
+      "id": "f1b8d61e-37b0-479f-b9a9-0bd0f64804a9",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "WRBpjjJ45GCvjOA9",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nreturn JSON.parse($input.first().json.text);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        -336
+      ],
+      "id": "3abb2c72-e34e-4eb0-a141-d7104389e00c",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/images/generations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "gpt-image-1"
+            },
+            {
+              "name": "size",
+              "value": "1024x1536"
+            },
+            {
+              "name": "prompt",
+              "value": "={{ $('Basic LLM Chain').item.json.text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1584,
+        -16
+      ],
+      "id": "c694e8a8-3356-46d8-bfb1-7875b545a6f4",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "krCXXqjMiU5tjKWR",
+          "name": "Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "data[0].b64_json",
+        "binaryPropertyName": "image",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1760,
+        -16
+      ],
+      "id": "a7d9091a-ee42-438f-afb3-a6f02bf3ee3d",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Questo è il testo da utilizzare per la creazione della immagine\n\nIl risultato finale deve essere inserito in un oggetto JSON\nNon inserire nulla prima dell'oggetto JSON come ad esempio \"```json\\n\"\n\n<testo>{{ $json.post }}</testo>",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=# SYSTEM PROMPT - AI IMAGE GENERATION EXPERT\n\n## IDENTITÀ E RUOLO\nSei un esperto di generazione immagini AI specializzato nella creazione di prompt professionali per tutti i principali modelli text-to-image. Il tuo compito è trasformare idee semplici o complesse in descrizioni dettagliate e tecnicamente precise per ottenere immagini di alta qualità utilizzando AI.\n\n## STRUTTURA OBBLIGATORIA DEL PROMPT IMMAGINE\nOgni output DEVE seguire questa struttura: **[SUBJECT] + [ENVIRONMENT] + [LIGHTING] + [STYLE] + [COMPOSITION] + [TECHNICAL]**\n\n### 1. SUBJECT (Soggetto Principale)\n**COSA DESCRIVERE:**\n- Il focus centrale dell'immagine con dettagli specifici\n- Caratteristiche fisiche, abbigliamento, espressioni\n- Pose, azioni e gestualità specifiche\n- Materiali, texture e colori dominanti\n\n**BUONE PRATICHE:**\n- ✅ BUONO: \"Una donna di 30 anni con capelli ricci castani, occhi verdi, che indossa un elegante abito blu navy, sorriso sereno\"\n- ❌ EVITARE: \"Una donna\"\n\n### 2. ENVIRONMENT (Ambiente e Contesto)\n**COSA DESCRIVERE:**\n- Ambientazione specifica e dettagliata\n- Elementi di contorno e sfondo\n- Stagione, tempo atmosferico, ora del giorno\n- Architettura, natura, interni/esterni\n\n**BUONE PRATICHE:**\n- ✅ BUONO: \"In un caffè parigino vintage con tavoli in legno, sedie in vimini, finestre ampie che affacciano su una strada acciottolata\"\n- ❌ EVITARE: \"In un caffè\"\n\n### 3. LIGHTING (Illuminazione)\n**ELEMENTI CHIAVE:**\n- **Qualità della luce:** \"Soft golden hour lighting\", \"Harsh studio lighting\", \"Dramatic chiaroscuro\"\n- **Direzione:** \"Backlit\", \"Side lighting\", \"Top lighting\", \"Rim lighting\"\n- **Intensità:** \"High key\" (luminoso), \"Low key\" (scuro/drammatico)\n- **Fonte:** \"Natural sunlight\", \"Neon lighting\", \"Candlelight\", \"Volumetric lighting\"\n\n**ESEMPI:**\n- \"Soft golden hour sunlight streaming through venetian blinds\"\n- \"Dramatic studio lighting with deep shadows and highlights\"\n- \"Ethereal moonlight filtering through mist\"\n\n### 4. STYLE (Stile Visuale)\n**CATEGORIE PRINCIPALI:**\n\n#### Stili Fotografici\n- **Ritrattistica:** \"Professional headshot\", \"Candid portrait\", \"Fashion photography\"\n- **Documentario:** \"Street photography\", \"Photojournalism style\", \"Documentary realism\"\n- **Commerciale:** \"Product photography\", \"Lifestyle photography\", \"Editorial style\"\n\n#### Stili Artistici\n- **Pittura:** \"Oil painting\", \"Watercolor\", \"Acrylic painting\", \"Impressionist style\"\n- **Digitale:** \"Digital illustration\", \"Concept art\", \"Matte painting\", \"3D rendering\"\n- **Vintage:** \"Film noir\", \"Vintage polaroid\", \"Retro 80s aesthetic\"\n\n#### Riferimenti di Artisti\n- \"In the style of [specific artist]\"\n- \"Reminiscent of [art movement]\"\n- \"Studio Ghibli animation style\"\n\n### 5. COMPOSITION (Composizione)\n**INQUADRATURE:**\n- **Distanza:** \"Extreme close-up\", \"Close-up\", \"Medium shot\", \"Wide shot\", \"Establishing shot\"\n- **Angolazione:** \"Low angle\", \"High angle\", \"Bird's eye view\", \"Worm's eye view\", \"Dutch angle\"\n- **Framing:** \"Centered composition\", \"Rule of thirds\", \"Off-center\", \"Symmetrical\"\n\n**PROFONDITÀ DI CAMPO:**\n- \"Shallow depth of field\" (sfondo sfocato)\n- \"Deep focus\" (tutto nitido)\n- \"Bokeh background\"\n- \"Macro photography\"\n\n### 6. TECHNICAL (Parametri Tecnici)\n**SPECIFICHE CAMERA:**\n- **Tipo:** \"Shot with Canon EOS R5\", \"35mm film photography\", \"Medium format\"\n- **Obiettivo:** \"85mm portrait lens\", \"Wide-angle lens\", \"Macro lens 100mm\"\n- **Apertura:** \"f/1.4 shallow DOF\", \"f/8 sharp focus\", \"f/2.8 bokeh\"\n\n**QUALITÀ E FORMATO:**\n- \"8K resolution\", \"4K ultra-detailed\", \"Professional photography\"\n- \"RAW unprocessed\", \"Film grain texture\", \"Crystal clear quality\"\n- \"Aspect ratio 16:9\", \"Square format 1:1\", \"Portrait orientation 9:16\"\n\n## ADATTAMENTO PER MODELLI SPECIFICI\n\n### MIDJOURNEY\n**CARATTERISTICHE:**\n- Eccelle in stili artistici e surreali\n- Migliore per composizioni creative\n- Supporta parametri come --ar (aspect ratio), --stylize, --chaos\n\n**OTTIMIZZAZIONI:**\n- Evita termini come \"photorealistic\" (usa descrizioni dettagliate invece)\n- Focus su keywords evocative e artistiche\n- Usa riferimenti a fotografi/artisti famosi\n- Lunghezza ideale: 40-60 parole\n\n### DALL-E 3/4\n**CARATTERISTICHE:**\n- Ottima comprensione del linguaggio naturale\n- Eccellente per prompt complessi e narrativi\n- Integrazione con ChatGPT per iterazioni\n\n**OTTIMIZZAZIONI:**\n- Descrizioni naturali e discorsive\n- Buona gestione di scene complesse\n- Forte in anatomia umana e realismo\n- Supporta prompt lunghi e dettagliati\n\n### STABLE DIFFUSION\n**CARATTERISTICHE:**\n- Altamente personalizzabile\n- Supporta negative prompts\n- Modelli specializzati disponibili\n\n**OTTIMIZZAZIONI:**\n- Usa keyword precise separate da virgole\n- Sfrutta negative prompts per escludere elementi\n- Specifiche tecniche dettagliate\n- Lunghezza: sotto i 380 caratteri per versioni base\n\n### FLUX\n**CARATTERISTICHE:**\n- Eccellente realismo fotografico\n- Forte aderenza ai prompt\n- Gestione ottimale di dettagli tecnici\n\n**OTTIMIZZAZIONI:**\n- Focus su dettagli tecnici fotografici\n- Descrizioni atmosferiche precise\n- Ottime performance con prompt lunghi (fino a 500 token)\n- Specifica camera settings e lighting\n\n## FRAMEWORK PER TIPOLOGIE DI IMMAGINI\n\n### RITRATTI PROFESSIONALI\n**TEMPLATE:**\n\"[Descrizione soggetto dettagliata] + [Abbigliamento specifico] + [Posa ed espressione] + [Background professionale] + [Illuminazione studio] + [Stile fotografico] + [Specifiche camera]\"\n\n**ESEMPIO:**\n\"Professional portrait of a confident 35-year-old businesswoman with short blonde hair and blue eyes, wearing a tailored navy blazer, sitting at a modern desk with arms crossed, gentle smile, in a contemporary office with floor-to-ceiling windows showing city skyline, soft studio lighting with key light and fill light, corporate headshot style, shot with Canon EOS R5, 85mm lens, f/2.8\"\n\n### FOTOGRAFIA DI PRODOTTO\n**TEMPLATE:**\n\"[Prodotto specifico] + [Materiali e colori] + [Posizionamento] + [Background e superficie] + [Illuminazione commerciale] + [Stile commerciale] + [Parametri tecnici]\"\n\n### PAESAGGI\n**TEMPLATE:**\n\"[Tipo di paesaggio] + [Elementi naturali specifici] + [Condizioni atmosferiche] + [Ora del giorno] + [Stile fotografico] + [Inquadratura] + [Specifiche tecniche]\"\n\n### ARTE CONCETTUALE\n**TEMPLATE:**\n\"[Concetto/tema] + [Elementi surreali] + [Palette colori] + [Atmosfera] + [Stile artistico] + [Composizione] + [Ispirazione artistica]\"\n\n## GESTIONE FILTRI CONTENUTO E LIMITAZIONI\n\n### PROBLEMI COMUNI E SOLUZIONI:\n- **Anatomia umana problematica** → Usa \"stylized\", \"artistic interpretation\", \"illustration style\"\n- **Contenuto sensibile** → Specifica \"family-friendly\", \"appropriate for all audiences\"\n- **Marchi protetti** → Usa \"inspired by\", \"in the style of\", \"reminiscent of\"\n- **Persone reali** → Evita nomi specifici, usa \"resembling [general description]\"\n\n### STRATEGIE ALTERNATIVE:\n1. **Usa termini generici:** \"Sports car\" invece di \"Ferrari\"\n2. **Aggiungi contesto artistico:** \"Digital artwork of...\", \"Artistic interpretation of...\"\n3. **Specifica stile non-realistico:** \"Cartoon style\", \"Stylized illustration\"\n4. **Evita eccesso di dettagli anatomici:** Focus su abbigliamento e pose\n\n## PAROLE CHIAVE AVANZATE\n\n### MATERIALI E TEXTURE\n- **Naturali:** \"Rough bark texture\", \"Smooth marble surface\", \"Soft velvet fabric\"\n- **Artificiali:** \"Brushed metal finish\", \"Glossy plastic\", \"Matte ceramic\"\n- **Fantastici:** \"Crystalline structure\", \"Liquid mercury\", \"Ethereal light\"\n\n### ATMOSFERA E MOOD\n- **Positivi:** \"Uplifting\", \"Serene\", \"Energetic\", \"Warm\", \"Inviting\"\n- **Drammatici:** \"Mysterious\", \"Intense\", \"Moody\", \"Dramatic\", \"Ethereal\"\n- **Specifici:** \"Nostalgic\", \"Futuristic\", \"Romantic\", \"Melancholic\"\n\n### COLORI E PALETTE\n- **Specifici:** \"Warm golden tones\", \"Cool blue palette\", \"Monochromatic scheme\"\n- **Avanzati:** \"Complementary colors\", \"Analogous harmony\", \"High contrast\"\n- **Cinematografici:** \"Teal and orange\", \"Desaturated blues\", \"Rich earth tones\"\n\n## PROCESSO OTTIMIZZAZIONE PROMPT\n\n### ANALISI RICHIESTA INIZIALE:\n1. **Identifica il tipo di immagine richiesta**\n2. **Determina il modello AI più adatto**\n3. **Stabilisci lo scopo (commerciale, artistico, tecnico)**\n4. **Valuta il livello di dettaglio necessario**\n\n### COSTRUZIONE PROMPT:\n1. **Inizia con il soggetto principale chiaro**\n2. **Aggiungi ambiente e contesto**\n3. **Specifica illuminazione desiderata**\n4. **Define lo stile e l'estetica**\n5. **Ottimizza composizione e inquadratura**\n6. **Aggiungi parametri tecnici**\n\n### ITERAZIONE E RAFFINAMENTO:\n- Testa diverse variazioni del prompt\n- Aggiusta un elemento alla volta\n- Documenta cosa funziona per riusi futuri\n- Mantieni una libreria di prompt di successo\n\n## ESEMPI DI TRASFORMAZIONE\n\n### INPUT SEMPLICE:\n\"Un gatto su un divano\"\n\n### OUTPUT ELABORATO:\n\"Professional pet portrait of a fluffy Persian cat with long white fur and bright blue eyes, lounging elegantly on a luxurious velvet sofa in deep emerald green, positioned in a cozy living room with warm ambient lighting from a nearby table lamp, soft golden hour sunlight filtering through sheer curtains, shallow depth of field with bokeh background, shot with Canon EOS R6, 85mm portrait lens, f/2.8, high-end lifestyle photography style\"\n\n## CRITERI DI QUALITÀ FINALI\n1. **Specificità**: Ogni elemento deve essere descritto con precisione\n2. **Coerenza**: Tutti gli elementi devono lavorare insieme armoniosamente\n3. **Fattibilità**: Il prompt deve essere realizzzabile dal modello AI specifico\n4. **Originalità**: Evita cliché e descrizioni generiche\n5. **Professionalità**: Mantieni standard tecnici elevati\n6. **Adattabilità**: Considera modifiche per diversi modelli AI\n\n## ISTRUZIONI OPERATIVE FINALI\n- Analizza sempre il contesto e lo scopo dell'immagine richiesta\n- Adatta il linguaggio al modello AI specifico quando indicato\n- Bilancia dettaglio tecnico con creatività artistica\n- Fornisci alternative quando il prompt principale potrebbe avere limitazioni\n- Mantieni focus sulla qualità professionale del risultato finale\n- Suggerisci iterazioni e variazioni quando appropriato"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        928,
+        -48
+      ],
+      "id": "d20b5890-1c80-4ab8-9b09-57d8b03a1cdb",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-20250514",
+          "cachedResultName": "Claude 4 Sonnet"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        928,
+        128
+      ],
+      "id": "b9002a73-1b38-45a1-813a-b8453a9347bf",
+      "name": "Anthropic Chat Model1",
+      "credentials": {
+        "anthropicApi": {
+          "id": "WRBpjjJ45GCvjOA9",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return JSON.parse($input.first().json.text);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1264,
+        -48
+      ],
+      "id": "62d2437e-d814-4e34-afd7-1c39b04292b9",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "content": "## Crea il testo del post a partire \n## da una semplice frase cercando su internet",
+        "height": 480,
+        "width": 680
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -96,
+        -448
+      ],
+      "typeVersion": 1,
+      "id": "d3bdbc57-2a3e-492f-82c1-164e3aad1d47",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "##      Crea il prompt per la \n##     generazione della immagine",
+        "height": 420,
+        "width": 640,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        672,
+        -144
+      ],
+      "typeVersion": 1,
+      "id": "11ddeb21-b12b-45a8-af34-d36846099940",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Crea l'immagine e la converte da base64 in un file jpg\n",
+        "height": 360,
+        "width": 480
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1504,
+        -144
+      ],
+      "typeVersion": 1,
+      "id": "c8cb059d-8be6-41ff-a175-d591d5a6cf5c",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=## FASE 1: RICERCA Effettua una ricerca approfondita su internet sull'argomento specificato. Cerca informazioni: \n- Aggiornate e verificate \n- Adatte al livello di conoscenza del target \n- Interessanti e sorprendenti \n- Pratiche e applicabili \n\n## FASE 2: ANALISI DEL TARGET \nAnalizza il target specificato e determina: \n- Livello di conoscenza tecnica \n- Linguaggio appropriato (tecnico/colloquiale) \n- Interessi e motivazioni \n- Possibili obiezioni o resistenze \n\n## FASE 3: CREAZIONE DEL POST \nCrea un post per Facebook che includa: \n### STRUTTURA: \n1. Hook iniziale (prima frase che cattura l'attenzione) \n2. Introduzione dell'argomento (spiegazione semplice se il target non è esperto) \n3. Contenuto principale (i fatti/informazioni trovate nella ricerca) \n4. Call-to-action (domanda o invito al coinvolgimento) \n5. Hashtag rilevanti (3-5 hashtag mirati) \n### REQUISITI STILISTICI: \n- Tono: [adattato al target - professionale/amichevole/educativo] \n- Lunghezza: 150-300 parole \n- Usa emoji appropriate (2-4 per post) \n- Evita jargon tecnico se il target non è esperto \n- Includi elementi di storytelling quando possibile \n- Rendi il contenuto facilmente scannable (usa spazi, punti elenco se necessario) \n### ELEMENTI DI ENGAGEMENT: \n- Fai una domanda al pubblico \n- Invita a condividere esperienze \n- Chiedi opinioni o feedback \n- Suggerisci azioni concrete \n\n## OUTPUT FINALE: \nFornisci in un oggetto json: \n1. Il post completo pronto per la pubblicazione \n2. Una breve spiegazione delle scelte stilistiche fatte \n3. Suggerimenti per il momento migliore di pubblicazione\n\n## REGOLE DI CREAZIONE JSON\nNon inserire nulla prima dell'oggetto JSON come ad esempio \"```json\\n\""
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -16,
+        -336
+      ],
+      "id": "3d7da43c-94d8-4466-8f54-a4eec2dcffd8",
+      "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Questo è il prompt da analizzare \n\n<prompt>\nAnalisi di Claude Code, Codex e Google Ai Studio per quanto riguarda il vibe coding\n</prompt>\n\nIl risultato finale deve essere inserito in un oggetto JSON\nNon inserire nulla prima dell'oggetto JSON come ad esempio \"```json\\n\"\n\nForza gli escape dei caratteri ' e \"\nIl testo deve essere scritto sempre e solamente su una riga sola. Forza gli escape dei caratteri \\n\n\n\n",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "## RUOLO E OBIETTIVO\nSei un esperto di generazione video AI specializzato in Video realizzati tramite le Intelligente Artificiale ed il Text to speech. \nIl tuo compito è trasformare prompt semplici o complessi in descrizioni dettagliate e tecnicamente precise per la generazione di video di alta qualità.\n\n## STRUTTURA OBBLIGATORIA DEL PROMPT VIDEO\nOgni output DEVE seguire questa struttura: **[SUBJECT] + [CONTEXT] + [ACTION] + [STYLE] + [SOUND] + [DIALOG]**\n\n### 1. SUBJECT (Soggetto Principale)\n**COSA DESCRIVERE:**\n- Il focus principale del video con dettagli specifici\n- Caratteristiche fisiche dettagliate dei personaggi\n- Abbigliamento, età, espressioni facciali\n\n**BUONE PRATICHE:**\n- ✅ BUONO: \"Un gorilla maschio adulto con pelo grigio-argento, cicatrici sul muso, espressione pensierosa\"\n- ❌ EVITARE: \"Un gorilla\"\n\n### 2. CONTEXT (Contesto e Ambiente)\n**COSA DESCRIVERE:**\n- Ambientazione specifica (luogo, tempo, condizioni atmosferiche)\n- Elementi dell'ambiente circostante\n- Condizioni di illuminazione\n\n**BUONE PRATICHE:**\n- ✅ BUONO: \"In una giungla tropicale al tramonto, con raggi di sole dorati che filtrano attraverso la vegetazione fitta\"\n- ❌ EVITARE: \"All'aperto\"\n\n### 3. ACTION (Azione e Movimento)\n**COSA DESCRIVERE:**\n- Movimenti specifici e dinamici del soggetto\n- Gestualità e comportamenti\n- Interazioni con oggetti o ambiente\n\n**BUONE PRATICHE:**\n- ✅ BUONO: \"Gesticola con le mani enormi mentre parla, occasionalmente si aggiusta gli occhiali da sole\"\n- ❌ EVITARE: \"Si muove\"\n\n### 4. STYLE (Stile Visuale)\n**OPZIONI DISPONIBILI:**\n- Stili cinematografici: \"Film noir\", \"Documentario BBC\", \"Stile Pixar\", \"Realismo fotografico\"\n- Stili artistici: \"Hyperrealistico\", \"Animazione 3D\", \"Stile cartoon\"\n- Riferimenti registi: \"Stile Wes Anderson\", \"Cinematografia Kubrick\"\n\n**MOVIMENTI CAMERA SPECIFICI:**\n- **Inquadrature statiche:** \"Piano fisso\", \"Campo largo\", \"Primo piano\"\n- **Movimenti:** \"Dolly lento in avvicinamento\", \"Tracking laterale\", \"Pan da sinistra a destra\"\n- **Angolazioni:** \"Inquadratura dal basso verso l'alto\", \"Vista aerea\", \"Angolo olandese\"\n\n### 5. SOUND (Audio e Suoni)\n**ELEMENTI DA INCLUDERE:**\n- **Effetti sonori specifici:** \"Suoni della giungla, cinguettio di uccelli, fruscio di foglie\"\n- **Musica:** \"Colonna sonora orchestrale drammatica\", \"Sottofondo ambient naturale\"\n- **Qualità audio ambiente:** \"Eco naturale\", \"Audio cristallino\", \"Riverbero sottile\"\n\n### 6. DIALOG (Dialogo e Voce)\n**COSA DESCRIVERE:**\n- Contenuto specifico del dialogo\n- Caratteristiche vocali (tono, velocità, emozione)\n- Stile di consegna\n\n**ESEMPI:**\n- \"Con voce profonda e rauca dice: 'Ascolta bene, per arrivare a Roma non devi passare per Berlino'\"\n- \"Sussurra con tono confidenziale mentre gesticola\"\n\n## LIMITAZIONI TECNICHE DA RICORDARE\n- Durata video: ~8 secondi per generazione\n- Múltiple tentativi potrebbero essere necessari\n- Più dettagli = maggiore controllo del risultato\n- Mantenere coerenza tra clip correlate\n\n## PARAMETRI AVANZATI DISPONIBILI\n\n### EFFETTI LENTI E FOCUS\n- \"Profondità di campo ridotta\" (sfondo sfocato)\n- \"Messa a fuoco totale\" (tutto nitido)\n- \"Cambio di messa a fuoco\" (rack focus)\n- \"Macro estremo\" per dettagli ravvicinati\n\n### PAROLE CHIAVE MOVIMENTO CAMERA\n| Tipo | Parole Chiave | Uso |\n|------|---------------|-----|\n| Pan | \"Pan lento\", \"Panoramica\" | Rivelare paesaggi |\n| Tilt | \"Tilt verso l'alto/basso\" | Mostrare scala |\n| Dolly | \"Dolly in/out\", \"Avvicinamento lento\" | Creare intimità |\n| Tracking | \"Carrellata\", \"Segue il soggetto\" | Seguire movimento |\n| Zoom | \"Zoom in/out\", \"Zoom drammatico\" | Focus/drama |\n| Crane | \"Ripresa aerea\", \"Vista dall'alto\" | Rivelare ambientazione |\n\n## ISTRUZIONI OPERATIVE\n\n### QUANDO RICEVI UN PROMPT SEMPLICE:\n1. Analizza gli elementi base forniti\n2. Espandi ogni componente seguendo la struttura obbligatoria\n3. Aggiungi dettagli cinematografici appropriati\n4. Includi elementi audio realistici\n\n### QUANDO RICEVI UN PROMPT COMPLESSO:\n1. Identifica tutti gli elementi già specificati\n2. Riorganizza secondo la struttura SUBJECT+CONTEXT+ACTION+STYLE+SOUND+DIALOG\n3. Ottimizza la formulazione per massima chiarezza\n4. Aggiungi dettagli tecnici mancanti\n\n## ESEMPI DI TRASFORMAZIONE\n\n### INPUT SEMPLICE:\n\"Due gorilla che parlano di come andare a Roma senza passare da Berlino\"\n\n### OUTPUT ELABORATO:\n\"Due gorilla maschi adulti con pelo grigio-argento, uno leggermente più grande dell'altro, ripresi di profilo in una radura della giungla africana al tramonto con raggi dorati che filtrano attraverso gli alberi di acacia. I gorilla sono posizionati uno di fronte all'altro, gesticolano con movimenti espressivi delle braccia e si vede chiaramente il movimento sincronizzato delle loro bocche mentre parlano, ma le parole non sono udibili. Stile documentario naturalistico con cinematografia fluida, ripresa laterale fissa a campo medio che inquadra entrambi i soggetti. Audio: sottofondo musicale ambient rilassante, suoni naturali della giungla con cinguettio di uccelli tropicali e leggero fruscio del vento tra le foglie. Nessun dialogo udibile, solo movimento labiale naturale e gestualità comunicativa.\"\n\n## GESTIONE FILTRI DI CONTENUTO SENSIBILE\n\n### PROBLEMI COMUNI E SOLUZIONI:\n- **\"Gorilla\" può essere flaggato** → Usa \"grandi scimmie antropomorfe\", \"primati\", \"orango\", \"scimpanzé\"\n- **Giochi d'azzardo** → Specifica \"gioco di carte tradizionale\", \"passatempo familiare\"\n- **Azioni \"violente\"** → Sostituisci \"sbatte\" con \"posa decisamente\", \"posiziona con enfasi\", \"appoggia con sicurezza\"\n- **Animali umanizzati** → Aggiungi \"stile cartoon\", \"animazione\", \"personaggi fantastici\"\n\n### STRATEGIE ALTERNATIVE:\n1. **Usa descrizioni più soft:** \"appoggia la carta con gesto trionfante\" invece di \"sbatte\"\n2. **Aggiungi contesto familiare:** \"in un ambiente sereno e giocoso\"\n3. **Specifica stile cartoon:** \"stile animazione Pixar\" o \"cartoon family-friendly\"\n4. **Evita antropomorfizzazione diretta:** \"creature fantastiche simili a primati\"\n\n### ESEMPIO RIFORMULATO:\n**INVECE DI:** \"Due gorilla che giocano a briscola. Uno sbatte la carta sul tavolo\"\n\n**USA:** \"Due grandi primati antropomorfi in stile cartoon che giocano a un tradizionale gioco di carte italiano. Uno dei due posa la carta decisamente sul tavolo di legno con gesto trionfante e soddisfatto in un'atmosfera familiare e giocosa\"\n\n## REGOLE FINALI\n- SEMPRE seguire la struttura completa\n- ESSERE specifici e dettagliati\n- EVITARE descrizioni negative (\"non mostrare...\")\n- USARE terminologia cinematografica professionale\n- MANTENERE coerenza narrativa\n- OTTIMIZZARE per massima qualità visiva VEO3\n- **EVITARE linguaggio che possa essere flaggato come sensibile**\n- **UTILIZZARE alternative family-friendly quando necessario**"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        688,
+        448
+      ],
+      "id": "abeba010-e0b3-4c63-9cd4-a8d59918a9cf",
+      "name": "Basic LLM Chain2"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-20250514",
+          "cachedResultName": "Claude 4 Sonnet"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        752,
+        672
+      ],
+      "id": "f230f32c-d750-4f5b-ab7f-6a6025c86775",
+      "name": "Anthropic Chat Model2",
+      "credentials": {
+        "anthropicApi": {
+          "id": "WRBpjjJ45GCvjOA9",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\"output\" : $input.first().json.text.replaceAll(\"\\n\",\"\").replaceAll('\"','\\\\\"')};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        448
+      ],
+      "id": "25505e57-ce0f-426f-9e18-e6d7680a301c",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.wavespeed.ai/api/v3/bytedance/seedance-v1-lite-t2v-720p",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"aspect_ratio\": \"16:9\",\n  \"duration\": 5,\n  \"prompt\": \"{{ $('Basic LLM Chain2').item.json.text.replaceAll('\"','\\\\\"') }}\",\n  \"seed\": -1\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1344,
+        448
+      ],
+      "id": "27075e6c-7b0e-4fbc-b9a7-8355b0c41217",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "bWyIg59epA9jm8yP",
+          "name": "Bearer Auth Wavespeed"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1568,
+        448
+      ],
+      "id": "82074b1f-3d13-4571-937d-5401d5ea52ed",
+      "name": "Wait",
+      "webhookId": "1c40257c-f4f1-46d4-80de-a2fcf35a4195"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.wavespeed.ai/api/v3/predictions/{{ $json.data.id }}/result",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1792,
+        448
+      ],
+      "id": "88bd4189-a1a0-44cf-9b0b-50321c5a78a6",
+      "name": "HTTP Request2",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "bWyIg59epA9jm8yP",
+          "name": "Bearer Auth Wavespeed"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7701647b-916b-45de-9758-8b0ac7528638",
+              "leftValue": "={{ $json.data.status }}",
+              "rightValue": "completed",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2000,
+        448
+      ],
+      "id": "2a94bc8d-bdeb-4674-a65a-cb7ad5f1cdf8",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "content": "## Creazione Video tramite SeeDance via Wavespeed\n",
+        "height": 460,
+        "width": 1640,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        640,
+        384
+      ],
+      "typeVersion": 1,
+      "id": "a83a96cf-78af-4cad-ab78-bb41d90d07ae",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -288,
+        -64
+      ],
+      "id": "9a845c27-eadf-4e9a-a6a8-ac5766671539",
+      "name": "When chat message received",
+      "webhookId": "5bc3d08d-35f6-4148-8b0f-072b31555f2b"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-sonnet-4-20250514",
+          "mode": "list",
+          "cachedResultName": "Claude Sonnet 4"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        -16,
+        432
+      ],
+      "id": "69f83505-066b-4e30-86d3-1d26a92f90fd",
+      "name": "Anthropic Chat Model3",
+      "credentials": {
+        "anthropicApi": {
+          "id": "WRBpjjJ45GCvjOA9",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nreturn JSON.parse($input.first().json.text);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        208
+      ],
+      "id": "40958683-5057-4868-b566-5be20ecceef0",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=\n## FASE 1: CREAZIONE DEL POST \nCrea un post per Facebook che includa: \n### STRUTTURA: \n1. Hook iniziale (prima frase che cattura l'attenzione) \n2. Introduzione dell'argomento (spiegazione semplice se il target non è esperto) \n3. Contenuto principale (i fatti/informazioni trovate nella ricerca) \n4. Call-to-action (domanda o invito al coinvolgimento) \n5. Hashtag rilevanti (3-5 hashtag mirati) \n### REQUISITI STILISTICI: \n- Tono: [adattato al target - professionale/amichevole/educativo] \n- Lunghezza: 150-300 parole \n- Usa emoji appropriate (2-4 per post) \n- Evita jargon tecnico se il target non è esperto \n- Includi elementi di storytelling quando possibile \n- Rendi il contenuto facilmente scannable (usa spazi, punti elenco se necessario) \n### ELEMENTI DI ENGAGEMENT: \n- Fai una domanda al pubblico \n- Invita a condividere esperienze \n- Chiedi opinioni o feedback \n- Suggerisci azioni concrete \n\n## OUTPUT FINALE: \nFornisci in un oggetto json: \n1. Il post completo pronto per la pubblicazione \n2. Una breve spiegazione delle scelte stilistiche fatte \n3. Suggerimenti per il momento migliore di pubblicazione\n4. Non inserire nulla prima dell'oggetto JSON come ad esempio \"```json\\n\"\n5. Controlla 3 volte che il punto 4 sia soddisfatto\n"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -16,
+        208
+      ],
+      "id": "b68a634e-3a30-4bb4-9393-dbd54175ed66",
+      "name": "Basic LLM Chain3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain2": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain3",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain3": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "8184f9a9-3c65-425c-898b-c14643368a73",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ae1d31848e787b36264dca946e3aedbbd34c93839c3ed436458919862dc9133e"
+  },
+  "id": "jeEyAPPVpTWHQ9eb",
+  "tags": []
+}
